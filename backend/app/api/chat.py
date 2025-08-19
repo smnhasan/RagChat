@@ -4,7 +4,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 import time
 
-from rag.pipeline import Pipeline
+from .rag.pipeline import Pipeline
 
 router = APIRouter()
 
