@@ -20,27 +20,27 @@ export default function MessageBubble({ message, isBot, timestamp }: MessageBubb
 
   return (
     <div className={clsx(
-      'flex items-start space-x-3 max-w-4xl',
-      isBot ? 'justify-start' : 'justify-end flex-row-reverse space-x-reverse'
+      'flex max-w-4xl w-full',
+      isBot ? 'justify-start' : 'justify-end'
     )}>
       {/* Avatar */}
       <div className={clsx(
-        'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-        isBot 
-          ? 'bg-primary-100 text-primary-600' 
-          : 'bg-gray-700 text-white'
+        'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1',
+        isBot ? 'bg-blue-100 text-blue-600' : 'bg-gray-700 text-white'
       )}>
         {isBot ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
       </div>
 
       {/* Message Content */}
       <div className={clsx(
-        'flex flex-col',
+        'flex flex-col max-w-[80%]',
         isBot ? 'items-start' : 'items-end'
       )}>
         <div className={clsx(
-          'message-bubble',
-          isBot ? 'bot-message' : 'user-message'
+          'message-bubble rounded-lg px-4 py-2',
+          isBot 
+            ? 'bg-blue-50 text-gray-900 ml-2' 
+            : 'bg-gray-700 text-white ml-2'
         )}>
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
             {message}

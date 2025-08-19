@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Send, RotateCcw } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import Loader from './Loader'
-import { sendMessage } from '@/services/api'
+import { sendMessageStream } from '@/services/api'
 
 interface Message {
   id: string
@@ -17,7 +17,7 @@ export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your RAG-powered assistant. I can help answer questions using information from my knowledge base. What would you like to know?",
+      text: "Hello! I'm your RAG-powered assistant. I can stream responses token by token. What would you like to know?",
       isBot: true,
       timestamp: new Date()
     }
@@ -50,26 +50,40 @@ export default function ChatBox() {
     setInputText('')
     setIsLoading(true)
 
-    try {
-      const response = await sendMessage(currentQuery)
-      
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.answer || "I apologize, but I couldn't process your request at the moment.",
-        isBot: true,
-        timestamp: new Date()
-      }
+    const botMessageId = (Date.now() + 1).toString()
+    setMessages(prev => [
+      ...prev,
+      { id: botMessageId, text: '', isBot: true, timestamp: new Date() }
+    ])
 
-      setMessages(prev => [...prev, botMessage])
+    let firstTokenReceived = false // reset per message
+
+    try {
+      await sendMessageStream(currentQuery, (token: string) => {
+        // Hide loader on first token
+        if (!firstTokenReceived) {
+          setIsLoading(false)
+          firstTokenReceived = true
+        }
+
+        // Append token with a space for proper word spacing
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === botMessageId
+              ? { ...msg, text: msg.text + token + " " }
+              : msg
+          )
+        )
+      })
     } catch (error) {
-      console.error('Error sending message:', error)
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: error instanceof Error ? error.message : "I'm sorry, I encountered an error while processing your request. Please try again later.",
-        isBot: true,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
+      console.error('Streaming error:', error)
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === botMessageId
+            ? { ...msg, text: "⚠️ Error streaming response. Please try again." }
+            : msg
+        )
+      )
     } finally {
       setIsLoading(false)
     }
@@ -78,7 +92,7 @@ export default function ChatBox() {
   const clearChat = () => {
     setMessages([{
       id: '1',
-      text: "Chat cleared! I'm ready to help you with any questions you have.",
+      text: "Chat cleared! Ready to stream a fresh response.",
       isBot: true,
       timestamp: new Date()
     }])
@@ -88,7 +102,7 @@ export default function ChatBox() {
     <div className="flex flex-col h-full max-h-[calc(100vh-120px)] bg-white rounded-lg shadow-lg">
       {/* Chat Header */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Chat with RAG Bot</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Chat with RAG Bot (Streaming)</h2>
         <button
           onClick={clearChat}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
@@ -104,12 +118,12 @@ export default function ChatBox() {
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
-            message={message.text}
+            message={message.text.trim()} // trim trailing spaces
             isBot={message.isBot}
             timestamp={message.timestamp}
           />
         ))}
-        
+
         {isLoading && (
           <div className="flex justify-start">
             <div className="message-bubble bot-message">
@@ -117,7 +131,7 @@ export default function ChatBox() {
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -140,9 +154,9 @@ export default function ChatBox() {
             <Send className="h-4 w-4" />
           </button>
         </div>
-        
+
         <div className="mt-2 text-xs text-gray-500 text-center">
-          Powered by Retrieval-Augmented Generation
+          Powered by Retrieval-Augmented Generation (Streaming)
         </div>
       </form>
     </div>

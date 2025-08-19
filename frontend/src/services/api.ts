@@ -1,145 +1,97 @@
-import axios from 'axios'
+import axios from "axios"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 
-// Create axios instance with default config
+// Axios instance
 const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/api`,
-  timeout: 30000, // 30 seconds timeout
+  timeout: 30000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-  // Disable CORS preflight for simple requests
   withCredentials: false,
 })
 
-// Request interceptor
+// Request interceptor (adds token if present)
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
-// Response interceptor
+// Response interceptor (handles 401)
 apiClient.interceptors.response.use(
-  (response) => {
-    return response
-  },
+  (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token')
-      }
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("auth_token")
     }
     return Promise.reject(error)
   }
 )
 
-export interface ChatRequest {
-  query: string
-}
+// ----------------------------
+// Streaming chat (SSE)
+// ----------------------------
+export async function sendMessageStream(
+  query: string,
+  onMessage: (token: string) => void
+): Promise<void> {
+  const url = `http://127.0.0.1:8000/api/chat/stream?query=${encodeURIComponent(query)}`;
 
-export interface ChatResponse {
-  query: string
-  answer: string
-}
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "text/event-stream",
+    },
+  });
 
-export interface HealthResponse {
-  status: string
-  timestamp: string
-}
-
-// Regular chat API function (non-streaming)
-export const sendMessage = async (query: string): Promise<ChatResponse> => {
-  try {
-    console.log('Sending message to:', `${API_BASE_URL}/api/chat`)
-    console.log('Payload:', { query })
-    
-    const payload: ChatRequest = {
-      query
-    }
-
-    const response = await apiClient.post<ChatResponse>('/chat', payload)
-    console.log('Response received:', response.data)
-    return response.data
-  } catch (error: any) {
-    console.error('Full error object:', error)
-    console.error('Error response:', error.response)
-    console.error('Error message:', error.message)
-    console.error('Error code:', error.code)
-    
-    // Return a default error response
-    if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
-      throw new Error('Unable to connect to the server. Please check if the backend is running.')
-    }
-    
-    if (error.response?.status === 500) {
-      throw new Error('Server error occurred. Please try again later.')
-    }
-    
-    throw new Error(error.response?.data?.message || error.message || 'Failed to send message')
+  if (!response.body) {
+    throw new Error("No response body received from server");
   }
-}
 
-// Streaming chat API function using SSE
-export const sendMessageStream = async (
-  query: string, 
-  onToken: (token: string) => void,
-  onComplete: () => void,
-  onError: (error: string) => void
-): Promise<void> => {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+
   try {
-    const url = `${API_BASE_URL}/api/chat/stream?query=${encodeURIComponent(query)}`
-    
-    // Create EventSource for SSE
-    const eventSource = new EventSource(url)
-    
-    eventSource.onmessage = (event) => {
-      const data = event.data
-      
-      // Check if streaming is complete
-      if (data === '[DONE]') {
-        eventSource.close()
-        onComplete()
-        return
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.replace("data: ", "").trim();
+          if (data === "[DONE]") {
+            return;
+          }
+          onMessage(data);
+        }
       }
-      
-      // Send token to callback
-      onToken(data)
     }
-    
-    eventSource.onerror = (error) => {
-      console.error('EventSource error:', error)
-      eventSource.close()
-      onError('Streaming connection error occurred')
-    }
-    
-  } catch (error: any) {
-    console.error('Error starting stream:', error)
-    onError(error.message || 'Failed to start streaming')
+  } finally {
+    reader.releaseLock();
   }
 }
 
-// WebSocket chat function
+
+// ----------------------------
+// WebSocket chat
+// ----------------------------
 export class WebSocketChat {
   private ws: WebSocket | null = null
   private onMessage: ((message: string) => void) | null = null
   private onError: ((error: string) => void) | null = null
   private onConnect: (() => void) | null = null
   private onDisconnect: (() => void) | null = null
-
-  constructor() {
-    this.ws = null
-  }
 
   connect(
     onMessage: (message: string) => void,
@@ -153,11 +105,14 @@ export class WebSocketChat {
     this.onDisconnect = onDisconnect
 
     try {
-      const wsUrl = API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://')
+      const wsUrl = API_BASE_URL.replace("http://", "ws://").replace(
+        "https://",
+        "wss://"
+      )
       this.ws = new WebSocket(`${wsUrl}/api/ws/chat`)
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected')
+        console.log("WebSocket connected")
         this.onConnect?.()
       }
 
@@ -166,17 +121,17 @@ export class WebSocketChat {
       }
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-        this.onError?.('WebSocket connection error')
+        console.error("WebSocket error:", error)
+        this.onError?.("WebSocket connection error")
       }
 
       this.ws.onclose = () => {
-        console.log('WebSocket disconnected')
+        console.log("WebSocket disconnected")
         this.onDisconnect?.()
       }
     } catch (error: any) {
-      console.error('Error creating WebSocket:', error)
-      this.onError?.(error.message || 'Failed to create WebSocket connection')
+      console.error("Error creating WebSocket:", error)
+      this.onError?.(error.message || "Failed to create WebSocket connection")
     }
   }
 
@@ -184,8 +139,8 @@ export class WebSocketChat {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(message)
     } else {
-      console.error('WebSocket is not connected')
-      this.onError?.('WebSocket is not connected')
+      console.error("WebSocket is not connected")
+      this.onError?.("WebSocket is not connected")
     }
   }
 
@@ -201,21 +156,29 @@ export class WebSocketChat {
   }
 }
 
-// Health check function
+// ----------------------------
+// Health check
+// ----------------------------
+export interface HealthResponse {
+  status: string
+  timestamp: string
+}
+
 export const checkHealth = async (): Promise<HealthResponse> => {
   try {
-    const response = await apiClient.get<HealthResponse>('/health')
+    const response = await apiClient.get<HealthResponse>("/health")
     return response.data
   } catch (error) {
-    console.error('Health check failed:', error)
+    console.error("Health check failed:", error)
     throw error
   }
 }
 
-// Utility function to generate session ID
+// ----------------------------
+// Utility
+// ----------------------------
 const generateSessionId = (): string => {
-  return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now()
+  return "session_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now()
 }
 
-// Export the configured axios instance for custom requests
-export { apiClient }
+export { apiClient, generateSessionId }
