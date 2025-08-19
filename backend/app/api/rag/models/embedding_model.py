@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_t
 from dotenv import load_dotenv
 
 load_dotenv()
-BASE_URL = os.getenv("BASE_URL", "").rstrip("/")
+BASE_URL = 'https://chatbot.staging.nascenia.com'
 
 
 class Embedding(Embeddings):
