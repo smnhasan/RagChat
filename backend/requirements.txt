@@ -1,26 +1,35 @@
-# Core dependencies
-pandas>=2.0.0
-numpy>=1.24.0
+# Requirements for the backend service
+fastapi==0.111.0
+uvicorn==0.30.1
+gunicorn==22.0.0
+pydantic==2.8.2
+requests
 
-# ML/AI frameworks
-InstructorEmbedding==1.0.1
-sentence-transformers==2.2.2
-transformers>=4.20
-torch>=2.0
 
-# Data handling
-datasets>=2.20
-pyarrow>=17.0
+# For later when service is to be implemented
+# # Core dependencies
+# pandas>=2.0.0
+# numpy>=1.24.0
 
-# Hugging Face
-huggingface-hub==0.24.0
+# # ML/AI frameworks
+# InstructorEmbedding==1.0.1
+# sentence-transformers==2.2.2
+# transformers>=4.20
+# torch>=2.0
 
-# Text processing
-nltk>=3.8
+# # Data handling
+# datasets>=2.20
+# pyarrow>=17.0
 
-# Additional utilities
-tqdm>=4.64.0
-requests>=2.28.0
+# # Hugging Face
+# huggingface-hub==0.24.0
+
+# # Text processing
+# nltk>=3.8
+
+# # Additional utilities
+# tqdm>=4.64.0
+# requests>=2.28.0
 
 # GPU support (optional - install manually if needed)
 # llama-cpp-python==0.2.85 --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu122
