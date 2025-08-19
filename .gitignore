@@ -1,3 +1,5 @@
 *.pyc
 *.idea
 backend/rag/models/llm/models
+
+.env
