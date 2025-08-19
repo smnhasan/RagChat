@@ -4,8 +4,8 @@ from .models.llm import LlamaModel, ModelConfig, get_chat_messages
 class Pipeline:
     def __init__(self):
         
-        config = LLMConfig()
-        self.llm = LLM(config)
+        config = ModelConfig()
+        self.llm = LlamaModel(config)
         
         
     def generate(self, query):
@@ -18,7 +18,7 @@ class Pipeline:
         Returns:
             str: The generated response.
         """
-        messages = get_chat_message(query)
+        messages = get_chat_messages(query)
         res = self.llm.generate_with_chat_template(messages)
 
         return self.llm.generate(res)
