@@ -1,4 +1,4 @@
-from .model.llm import LLM, LLMConfig, get_chat_message
+from .models.llm import LLM, LLMConfig, get_chat_message
 
 
 class Pipeline:
