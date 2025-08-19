@@ -3,3 +3,4 @@
 backend/rag/models/llm/models
 
 .env
+*.log

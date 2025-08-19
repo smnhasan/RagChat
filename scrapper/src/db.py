@@ -14,9 +14,9 @@ class RedisDB:
     def __init__(self):
         self.redis_client = redis.Redis(
             host=os.getenv('REDIS_HOST', 'localhost'),
-            port=int(os.getenv('REDIS_PORT', 6379)),
-            db=int(os.getenv('REDIS_DB', 0)),
-            password=os.getenv('REDIS_PASSWORD', None),
+            port=int(os.getenv('REDIS_PORT', 6376)),
+            # db=int(os.getenv('REDIS_DB', 0)),
+            # password=os.getenv('REDIS_PASSWORD', None),
             decode_responses=True
         )
         
