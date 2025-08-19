@@ -12,10 +12,12 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ message, isBot, timestamp }: MessageBubbleProps) {
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Dhaka' // Explicitly set to +06 timezone; adjust if needed
+    }).format(date)
   }
 
   return (
