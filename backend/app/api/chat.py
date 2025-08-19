@@ -4,7 +4,11 @@ from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 import time
 
+from rag.pipeline import Pipeline
+
 router = APIRouter()
+
+pipeline = Pipeline()
 
 # -------------------------
 # Non-WebSocket endpoint
@@ -43,7 +47,8 @@ def fake_stream_generator(query: str):
     """
     Fake generator simulating token-by-token streaming.
     """
-    tokens = [f"{word} " for word in f"Streaming dummy response for: '{query}'".split()]
+    response = pipeline.generate(query)
+    tokens = [f"{word} " for word in response.split()]
     for token in tokens:
         yield f"data: {token}\n\n"
         time.sleep(0.3)  # simulate real-time delay
