@@ -4,3 +4,10 @@ backend/rag/models/llm/models
 
 .env
 *.log
+
+
+# Ignore frontend build files
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+
