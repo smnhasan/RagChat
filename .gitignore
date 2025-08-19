@@ -1,6 +1,6 @@
 *.pyc
 *.idea
-backend/rag/models/llm/models
+backend/app/api/rag/models/llm/models
 
 .env
 *.log
