@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 import time
@@ -12,8 +12,10 @@ print("Current Directory:", current_dir)
 
 
 from .rag.pipeline import Pipeline
+from .rag.ingestor import Ingestor
 
 pipeline = Pipeline()
+ingestor = Ingestor()
 
 
 router = APIRouter()
@@ -70,3 +72,34 @@ async def chat_stream(query: str):
     """
     return StreamingResponse(fake_stream_generator(query), media_type="text/event-stream")
 
+
+
+def run_ingestion_task():
+    """Wrapper for background ingestion with logging & error handling."""
+    try:
+        result = ingestor.ingest()
+        # logger.info(f"Ingestion completed: {result}")
+    except Exception as e:
+        # logger.error(f"Ingestion failed: {e}")
+        pass  # Avoid crashing background thread
+
+# -------------------------
+# Ingestor endpoint (GET with Background Task)
+# -------------------------
+@router.get("/ingest", tags=["Ingest"])
+async def ingest_endpoint(background_tasks: BackgroundTasks):
+    """
+    Trigger ingestion in the background (non-blocking).
+    Returns immediately with status message.
+    """
+    try:
+        print(f'Ingestion request is accepted...')
+        background_tasks.add_task(run_ingestion_task)
+        return JSONResponse(
+            content={"status": "started", "message": "Ingestion has been triggered and is running in the background."},
+            status_code=202,  # Accepted, since processing is async
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start ingestion: {str(e)}")
+    

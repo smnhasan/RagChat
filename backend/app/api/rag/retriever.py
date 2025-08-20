@@ -23,6 +23,8 @@ class Retriever:
         except Exception as e:
             logger.error(f"Failed to initialize Retriever: {str(e)}")
             raise RuntimeError(f"Retriever initialization failed: {str(e)}") from e
+        
+  
 
     def retrieve(self, query: str) -> List[str]:
         """
@@ -132,7 +134,7 @@ class Retriever:
             logger.error(f"Failed to update documents: {str(e)}")
             raise RuntimeError(f"Document update failed: {str(e)}") from e
 
-    def create_documents(self, text: str, text_splitter: RecursiveCharacterTextSplitter) -> List[Document]:
+    def create_documents(self, text: str) -> List[Document]:
         """
         Split text into documents using the text splitter.
 
@@ -151,13 +153,13 @@ class Retriever:
             logger.error("Invalid text: Must provide a non-empty string")
             raise ValueError("Text must be a non-empty string")
         
-        if not isinstance(text_splitter, RecursiveCharacterTextSplitter):
+        if not isinstance(self.text_splitter, RecursiveCharacterTextSplitter):
             logger.error("Invalid text_splitter: Must be an instance of RecursiveCharacterTextSplitter")
             raise ValueError("Text splitter must be a RecursiveCharacterTextSplitter")
 
         logger.info("Creating documents from text")
         try:
-            texts = text_splitter.split_text(text)
+            texts = self.text_splitter.split_text(text)
             documents = [
                 Document(page_content=chunk, metadata={"source": "input_text"})
                 for chunk in texts
