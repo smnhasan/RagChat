@@ -30,19 +30,22 @@ WORKERS=1
 LOG_DIR="./logs"
 ACCESS_LOG="$LOG_DIR/access.log"
 ERROR_LOG="$LOG_DIR/error.log"
+INFO_LOG="$LOG_DIR/info.log"
 
 # Create log directory if not exists
 mkdir -p $LOG_DIR
 
 echo "Starting RAG Chatbot backend..."
-echo "Logs: $ACCESS_LOG , $ERROR_LOG"
+echo "Logs: Access=$ACCESS_LOG, Error=$ERROR_LOG, Info=$INFO_LOG"
 
 # Run Gunicorn with Uvicorn workers
 exec gunicorn $APP_MODULE \
     --workers $WORKERS \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind $HOST:$PORT \
-    --access-logfile $ACCESS_LOG \
-    --error-logfile $ERROR_LOG \
+    --access-logfile "$ACCESS_LOG" \
+    --error-logfile "$ERROR_LOG" \
+    --log-file "$INFO_LOG" \
     --capture-output \
     --log-level info
+    

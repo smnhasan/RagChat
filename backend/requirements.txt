@@ -1,9 +1,9 @@
 # Requirements for the backend service
 langchain
-langchain-core
+langchain-core==0.1.52
 langchain_community
-langchain_text_splitters
-chromadb==0.4.6
+langchain_text_splitters==0.0.1
+chromadb
 pdfminer.six==20221105
 protobuf==3.20.2
 unstructured==0.15.13
