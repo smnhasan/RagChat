@@ -1,9 +1,22 @@
 # Requirements for the backend service
-fastapi==0.111.0
-uvicorn==0.30.1
-gunicorn==22.0.0
-pydantic==2.8.2
-requests
+langchain
+langchain-core
+langchain_community
+langchain_text_splitters
+chromadb==0.4.6
+pdfminer.six==20221105
+protobuf==3.20.2
+unstructured==0.15.13
+scikit-learn==1.5.2
+schedule==1.2.1
+redis==5.0.8
+gunicorn==23.0.0
+pandas==2.2.3
+uvicorn==0.30.6
+fastapi==0.99.1
+APScheduler==3.10.4
+typing==3.7.4.3
+pydantic==1.10.18
 
 
 # For later when service is to be implemented

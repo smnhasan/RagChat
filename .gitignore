@@ -1,13 +1,21 @@
+# IDE
 *.pyc
 *.idea
-backend/rag/models/llm/models
 
+
+# LOGS and ENVS
 .env
 *.log
 
 
-# Ignore frontend build files
+# FRONTEND
 frontend/node_modules/
-frontend/dist/
+frontend/package-lock.json
 frontend/.next/
 
+
+# BACKEND
+
+
+
+# SCRAPPER
