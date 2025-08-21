@@ -15,7 +15,8 @@ frontend/.next/
 
 
 # BACKEND
-
+*.sqlite3
+backend/app/api/rag/db/knowledge_base/
 
 
 # SCRAPPER

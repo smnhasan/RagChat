@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Dict, Any
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from .db.vectorstore import VectorStore
@@ -25,8 +25,7 @@ class Retriever:
             raise RuntimeError(f"Retriever initialization failed: {str(e)}") from e
         
   
-
-    def retrieve(self, query: str) -> List[str]:
+    def retrieve(self, query: str) -> str:
         """
         Retrieve relevant documents based on the query using the vector store.
 
@@ -48,29 +47,56 @@ class Retriever:
         try:
             results = self.vector_store.query(query)
             logger.info(f"Retrieved {len(results)} documents")
-            return results
+            
+            context = self.prepare_context(results)
+            return context                      
         except Exception as e:
             logger.error(f"Failed to retrieve documents for query '{query}': {str(e)}")
             raise RuntimeError(f"Document retrieval failed: {str(e)}") from e
 
-    def ingest(self, documents: List[str]) -> None:
+
+    def ingest(self, documents: List[Document]) -> None:
         """
         Add documents to the vector store.
 
         Args:
-            documents (List[str]): A list of documents to be added.
+            documents (List[Document]): A list of LangChain Document objects.
 
         Raises:
             ValueError: If documents list is empty or contains invalid entries.
             RuntimeError: If document ingestion fails.
         """
         if not documents or not isinstance(documents, list):
-            logger.error("Invalid documents: Must provide a non-empty list of strings")
-            raise ValueError("Documents must be a non-empty list of strings")
-        
-        if not all(isinstance(doc, str) and doc.strip() for doc in documents):
-            logger.error("Invalid documents: All documents must be non-empty strings")
-            raise ValueError("All documents must be non-empty strings")
+            logger.error("Invalid documents: Must provide a non-empty list of Document objects")
+            raise ValueError("Documents must be a non-empty list of Document objects")
+
+        for doc in documents:
+            # Ensure structure is correct
+            if not isinstance(doc, Document):
+                logger.info(f"Document type on issue: {type(doc)}")
+                logger.error(f"Invalid document structure: {doc}")
+                raise ValueError("Each document must be a LangChain Document object")
+            else:
+                logger.info(f"Document type: {type(doc)}")
+
+            page_content = getattr(doc, "page_content", "").strip()
+            metadata = getattr(doc, "metadata", {})
+
+            # Validate fields
+            if not page_content or not metadata:
+                logger.info(f"Ingesting empty or invalid document: {doc}")
+                logger.error("Invalid document: 'page_content' and 'metadata' must both be non-empty")
+                raise ValueError("All documents must have non-empty 'page_content' and 'metadata'")
+
+        # Final validation (extra safeguard)
+        if not all(
+            isinstance(doc, Document)
+            and getattr(doc, "page_content", "").strip()
+            and getattr(doc, "metadata", {})
+            for doc in documents
+        ):
+            logger.error("Invalid documents: All must contain non-empty 'page_content' and 'metadata'")
+            raise ValueError("All documents must contain non-empty 'page_content' and 'metadata'")
 
         logger.info(f"Ingesting {len(documents)} documents")
         try:
@@ -79,7 +105,8 @@ class Retriever:
         except Exception as e:
             logger.error(f"Failed to ingest documents: {str(e)}")
             raise RuntimeError(f"Document ingestion failed: {str(e)}") from e
-
+        
+        
     def delete_documents(self, document_ids: List[str]) -> None:
         """
         Delete documents from the vector store.
@@ -136,14 +163,13 @@ class Retriever:
 
     def create_documents(self, text: str) -> List[Document]:
         """
-        Split text into documents using the text splitter.
+        Split text into documents using the text splitter, ensuring no empty strings.
 
         Args:
             text (str): Input text to be split.
-            text_splitter (RecursiveCharacterTextSplitter): Text splitter.
 
         Returns:
-            List[Document]: List of Document objects.
+            List[Document]: List of Document objects with non-empty content.
 
         Raises:
             ValueError: If text is empty or not a string, or if text_splitter is invalid.
@@ -162,9 +188,12 @@ class Retriever:
             texts = self.text_splitter.split_text(text)
             documents = [
                 Document(page_content=chunk, metadata={"source": "input_text"})
-                for chunk in texts
+                for chunk in texts if chunk.strip()
             ]
-            logger.info(f"Created {len(documents)} documents")
+            if not documents:
+                logger.warning("No non-empty documents created from text")
+            else:
+                logger.info(f"Created {len(documents)} non-empty documents")
             return documents
         except Exception as e:
             logger.error(f"Failed to create documents: {str(e)}")
@@ -211,3 +240,37 @@ class Retriever:
             logger.error(f"Failed to create text splitter: {str(e)}")
             raise RuntimeError(f"Text splitter creation failed: {str(e)}") from e
         
+
+    def prepare_context(self, documents: List[Document]) -> str:
+        """
+        Prepare context from a list of documents.
+
+        Args:
+            documents (List[Document]): List of Document objects.
+
+        Returns:
+            str: Concatenated string of document contents.
+
+        Raises:
+            ValueError: If documents list is empty or contains invalid entries.
+        """
+        if not documents or not isinstance(documents, list):
+            logger.error("Invalid documents: Must provide a non-empty list of Document objects")
+            raise ValueError("Documents must be a non-empty list of Document objects")
+
+        context = ""
+        for _doc in documents:
+            doc, score = _doc
+            if not isinstance(doc, Document):
+                logger.error(f"Invalid document structure: {doc}")
+                logger.info(f"Document type on issue on context preparing: {type(doc)}")
+                continue
+            context += doc.page_content + "\n\n"
+        
+        if not context:
+            logger.warning("No valid content found in provided documents")
+            return "No relevant documents found related this query."
+
+        logger.info(f"Prepared context with {len(context)} characters")
+        return context
+    

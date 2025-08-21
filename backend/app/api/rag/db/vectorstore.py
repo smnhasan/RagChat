@@ -55,8 +55,7 @@ class VectorStore:
         """
         try:
             results = self.db.similarity_search_with_relevance_scores(
-                query=query,
-                search_type="similarity",
+                query=query
             )
             print(f'Retrieved {len(results)} documents for query: {query}', flush=True)
             return results if results else []

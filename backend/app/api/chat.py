@@ -61,7 +61,7 @@ def fake_stream_generator(query: str):
     tokens = [f"{word} " for word in response.split()]
     for token in tokens:
         yield f"data: {token}\n\n"
-        time.sleep(0.3)  # simulate real-time delay
+        time.sleep(0.05)  # simulate real-time delay
     yield "data: [DONE]\n\n"
 
 @router.get("/chat/stream", tags=["Chat"])

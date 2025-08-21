@@ -144,20 +144,25 @@ class Ingestor:
 
         return contents
 
+
     def process_data(self, contents: Sequence[Dict[str, Any]]) -> List[Any]:
         """
-        Convert raw contents into retriever documents.
+        Convert raw contents into retriever documents, ensuring no empty strings.
 
-        Returns
-        -------
-        List[Any]
-            A flat list of documents ready for ingestion.
+        Args:
+            contents (Sequence[Dict[str, Any]]): List of content items to process.
+
+        Returns:
+            List[Any]: A flat list of documents with non-empty content ready for ingestion.
         """
         documents: List[Any] = []
 
         for item in contents:
             url = item.get("url", "unknown")
             text = item.get("content")
+            
+            logger.info("Processing content for url=%s", url)
+            logger.info("Raw content: \n%s", text)            
 
             if not text or not str(text).strip():
                 logger.warning("Skipping item with empty content (url=%s).", url)
@@ -173,14 +178,21 @@ class Ingestor:
                 logger.warning("Retriever returned None for url=%s; skipping.", url)
                 continue
 
-            # Normalize to list
+            # Normalize to list and filter out any empty documents
             if isinstance(docs, list):
-                documents.extend(docs)
+                non_empty_docs = [doc for doc in docs if doc.page_content.strip()]
+                documents.extend(non_empty_docs)
             else:
-                documents.append(docs)
+                if docs.page_content.strip():
+                    documents.append(docs)
+                else:
+                    logger.warning("Skipping single empty document for url=%s", url)
+                    continue
+                    
+            logger.info("Created %d non-empty documents for url=%s", len(non_empty_docs) if isinstance(docs, list) else 1, url)
 
         if not documents:
-            logger.info("No documents produced from %d content items.", len(contents))
+            logger.info("No non-empty documents produced from %d content items.", len(contents))
 
         return documents
 
