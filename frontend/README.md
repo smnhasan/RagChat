@@ -28,23 +28,23 @@ A modern, responsive chatbot interface built with Next.js, React, and TypeScript
 frontend/
 ├── public/                   # Static assets
 ├── src/
-│   ├── app/                 # Next.js App Router pages
-│   │   ├── about/          # About page
-│   │   ├── chat/           # Chat page
-│   │   ├── globals.css     # Global styles
-│   │   ├── layout.tsx      # Root layout
-│   │   └── page.tsx        # Home page
-│   ├── components/          # Reusable React components
-│   │   ├── ChatBox.tsx     # Main chat interface
+│   ├── app/                  # Next.js App Router pages
+│   │   ├── about/            # About page
+│   │   ├── chat/             # Chat page
+│   │   ├── globals.css       # Global styles
+│   │   ├── layout.tsx        # Root layout
+│   │   └── page.tsx          # Home page
+│   ├── components/           # Reusable React components
+│   │   ├── ChatBox.tsx       # Main chat interface
 │   │   ├── MessageBubble.tsx # Individual message component
-│   │   └── Loader.tsx      # Loading animation
-│   └── services/           # API service layer
-│       └── api.ts          # Backend API integration
+│   │   └── Loader.tsx        # Loading animation
+│   └── services/             # API service layer
+│       └── api.ts            # Backend API integration
 ├── package.json
-├── tailwind.config.js      # Tailwind CSS configuration
-├── tsconfig.json          # TypeScript configuration
-├── next.config.js         # Next.js configuration
-├── postcss.config.js      # PostCSS configuration
+├── tailwind.config.js        # Tailwind CSS configuration
+├── tsconfig.json             # TypeScript configuration
+├── next.config.js            # Next.js configuration
+├── postcss.config.js         # PostCSS configuration
 └── README.md
 ```
 

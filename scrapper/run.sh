@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-LOGFILE="run_scrapper.log"
+LOGFILE="/var/log/run_scrapper.log"
 exec > >(tee -a "$LOGFILE") 2>&1
 
 echo "=== Starting Scrapper Script ==="
@@ -27,14 +27,24 @@ else
     exit 1
 fi
 
-# Start Redis server
-echo "[INFO] Starting Redis server on port 6376"
-if redis-server --port 6376 --dbfilename dump.rdb --dir redis & then
-    REDIS_PID=$!
-    echo "[OK] Redis server started with PID $REDIS_PID"
+# Ensure Redis dump directory exists
+REDIS_DIR="./redis"
+mkdir -p "$REDIS_DIR"
+
+# Check if Redis server is running, start if not
+REDIS_PORT=6376
+REDIS_PID_FILE="/var/run/redis_$REDIS_PORT.pid"
+if [ -f "$REDIS_PID_FILE" ] && ps -p "$(cat $REDIS_PID_FILE)" > /dev/null; then
+    echo "[INFO] Redis server already running on port $REDIS_PORT"
 else
-    echo "[ERROR] Failed to start Redis server" >&2
-    exit 1
+    echo "[INFO] Starting Redis server on port $REDIS_PORT"
+    redis-server --port $REDIS_PORT --dbfilename dump.rdb --dir "$REDIS_DIR" --daemonize yes --pidfile $REDIS_PID_FILE
+    if [ $? -eq 0 ]; then
+        echo "[OK] Redis server started"
+    else
+        echo "[ERROR] Failed to start Redis server" >&2
+        exit 1
+    fi
 fi
 
 # Run Python script
@@ -43,14 +53,13 @@ if python -m src.main; then
     echo "[OK] Python scrapper finished successfully"
 else
     echo "[ERROR] Python scrapper failed" >&2
-    kill $REDIS_PID || true
     exit 1
 fi
 
-# Cleanup Redis after script ends
-echo "[INFO] Stopping Redis server (PID $REDIS_PID)"
-kill $REDIS_PID || true
-wait $REDIS_PID 2>/dev/null || true
-
 echo "--------------------------------"
 echo "=== Scrapper Script Completed ==="
+
+# Cronjob setup instructions (not part of the script execution)
+# To schedule this script to run every day at 2 AM, add the following line to your crontab:
+# 0 2 * * * /bin/bash /path/to/scrapper_cron.sh
+# Use 'crontab -e' to edit the crontab and add the line above, replacing '/path/to/scrapper_cron.sh' with the actual path to this script.

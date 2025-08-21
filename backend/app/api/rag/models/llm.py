@@ -130,4 +130,16 @@ class LLM(BaseLLM, PydanticBaseModel):
         """
         return {"api_url": self.api_url}
     
+    def generate_response(self, prompt):
+        # Call the LLM with the constructed prompt
+        llm_response = self.generate([prompt])
+        text = llm_response.flatten()
+
+        if not text or not text[0].generations:
+            return "I'm sorry, I couldn't generate a response. Please try again."
+
+        generated_text = text[0].generations[0][0].text
+        response = generated_text.replace('"', "")   
+        return response
+    
     
