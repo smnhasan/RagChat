@@ -1,97 +1,128 @@
-# Web Scraper
+# News Scraper for Reporter Chatbot
 
-A Python web scraper that crawls websites starting from base URLs, discovers new URLs, and extracts text content to store in a Redis database.
+A Python-based web scraper designed to power a **News Reporter Chatbot**. The scraper crawls verified news websites, extracts articles, and stores them in a Redis database. This enables the chatbot to answer user queries about recent events and verify rumors or social media claims with reliable sources.
 
 ## Features
 
-- **URL Crawling**: Discovers URLs within the same domain starting from base URLs
-- **Content Extraction**: Extracts clean text content and page titles
-- **Redis Storage**: Stores scraped content with metadata in Redis
-- **Rate Limiting**: Respectful crawling with configurable delays
-- **Duplicate Detection**: Avoids re-scraping already processed URLs
-- **Logging**: Comprehensive logging of the scraping process
-
-## Setup
-
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Configure Redis**:
-   - Install Redis server locally or use a cloud Redis service
-   - Update `.env` file with your Redis connection details
-
-3. **Add Base URLs**:
-   - Edit `data/base_urls.txt` and add the starting URLs (one per line)
-
-4. **Configure Settings**:
-   - Modify `.env` file to adjust scraping parameters:
-     - `MAX_PAGES_PER_DOMAIN`: Maximum pages to crawl per domain
-     - `REQUEST_DELAY`: Delay between requests (in seconds)
-     - `USER_AGENT`: User agent string for requests
-
-## Usage
-
-Run the scraper:
-```bash
-cd web_scraper
-python -m src.main
-```
-
-The scraper will:
-1. Load base URLs from `data/base_urls.txt`
-2. Crawl each domain to discover URLs
-3. Extract and clean text content from each page
-4. Store the content in Redis with metadata
+* **Focused URL Crawling**: Crawls only trusted news domains starting from predefined base URLs.
+* **Verified Content Extraction**: Extracts clean article text, headlines, and publication details.
+* **Redis Integration**: Stores articles with metadata for fast retrieval by the chatbot.
+* **Duplicate Prevention**: Skips already scraped URLs to avoid redundant storage.
+* **Rate Limiting**: Configurable delay between requests to ensure respectful crawling.
+* **Comprehensive Logging**: Tracks crawling, scraping, and storage activities.
 
 ## Project Structure
 
 ```
-web_scraper/
-├── src/
-│   ├── main.py          # Main application entry point
-│   ├── crawler.py       # URL discovery and crawling
-│   ├── scrapper.py      # Content extraction and scraping
-│   ├── db.py           # Redis database operations
-│   └── utils.py        # Utility functions
+.scrapper/
 ├── data/
-│   └── base_urls.txt   # Input URLs
-├── tests/
-│   └── test_scrapper.py # Unit tests
-├── requirements.txt    # Dependencies
-├── .env               # Environment configuration
-└── README.md          # This file
+│   └── base_urls.txt       # List of news source URLs
+├── dump.rdb                # Redis database file
+├── README.md               # This file
+├── redis/
+│   └── dump.rdb            # Redis persistence file
+├── requirements.txt        # Python dependencies
+├── run_scrapper.log        # Log file for run.sh
+├── run.sh                  # Bash script to run the scraper
+├── scraper.log             # Scraper activity log
+├── src/
+│   ├── crawler.py          # URL discovery and crawling
+│   ├── db.py               # Redis database operations
+│   ├── __init__.py
+│   ├── main.py             # Main entry point
+│   ├── scrapper.py         # Article extraction and cleaning
+│   └── utils.py            # Utility functions
+└── tests/
+    └── test_scrapper.py    # Unit tests
 ```
 
-## Configuration
+## Setup
 
-Key environment variables in `.env`:
+### 1. Create Python Environment
 
-- `REDIS_HOST`: Redis server hostname
-- `REDIS_PORT`: Redis server port
-- `REDIS_DB`: Redis database number
-- `MAX_PAGES_PER_DOMAIN`: Limit pages per domain
-- `REQUEST_DELAY`: Delay between requests
-- `USER_AGENT`: HTTP User-Agent header
+Create a Conda environment with Python 3.10.13:
+
+```bash
+conda create -n scrapper-env python=3.10.13 -y
+conda activate scrapper-env
+```
+
+### 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure Redis
+
+* Install Redis locally or use a cloud Redis service.
+* Ensure Redis is running and accessible.
+* Default Redis persistence file is stored at `redis/dump.rdb`.
+
+### 4. Add Trusted News Sources
+
+Edit `data/base_urls.txt` and list the base URLs of news websites to scrape, one URL per line.
+
+### 5. Configure Settings (Optional)
+
+You can adjust scraping parameters in the `.env` file if available:
+
+* `MAX_PAGES_PER_DOMAIN` → Maximum articles per domain
+* `REQUEST_DELAY` → Delay between requests (seconds)
+* `USER_AGENT` → HTTP User-Agent header
+
+---
+
+## Usage
+
+### Run Scraper via Bash Script
+
+The `run.sh` script will activate the environment, run the scraper, and log output:
+
+```bash
+bash run.sh
+```
+
+This will:
+
+1. Load base URLs from `data/base_urls.txt`
+2. Crawl each domain to discover new URLs
+3. Extract and clean article text and metadata
+4. Store articles in Redis
+5. Log scraping activity to `scraper.log` and `run_scrapper.log`
+
+### Run Directly with Python
+
+```bash
+cd src
+python main.py
+```
+
+---
 
 ## Redis Data Structure
 
-- **Content**: Stored as hashes with keys like `content:<url_hash>`
-- **URL Index**: Set of scraped URLs in `scraped_urls`
-- **Metadata**: Includes title, content, timestamp, and content length
+* **Articles**: Stored as hashes with keys like `news:<url_hash>`
+* **Scraped URL Index**: Set `scraped_urls` stores all processed URLs
+* **Metadata**: Includes headline, content, source, timestamp, and length
+
+---
 
 ## Testing
 
-Run tests:
+Run unit tests:
+
 ```bash
-python -m pytest tests/
+pytest tests/
 ```
+
+---
 
 ## Notes
 
-- The scraper respects robots.txt limitations through rate limiting
-- Only crawls URLs within the same domain as the base URL
-- Automatically skips already scraped URLs
-- Handles errors gracefully and continues processing
-- Logs all activities to both console and log file
+* Only crawls **trusted news domains** listed in `base_urls.txt`.
+* Automatically skips duplicate URLs.
+* Handles errors gracefully without stopping the scraping process.
+* Respects rate limits to avoid overwhelming servers.
+* Provides structured and reliable data for the **News Reporter Chatbot**.
+
