@@ -15,7 +15,7 @@ export default function ChatPage() {
             <ArrowLeft className="h-5 w-5" />
             <span>Back to Home</span>
           </Link>
-          <h1 className="text-xl font-semibold text-gray-900">RAG Chatbot</h1>
+          <h1 className="text-xl font-semibold text-gray-900">News Reporter AI</h1>
           <div className="w-24"></div> {/* Spacer for centering */}
         </div>
       </header>
