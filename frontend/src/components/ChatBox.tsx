@@ -17,7 +17,7 @@ export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your RAG-powered assistant. I can stream responses token by token. What would you like to know?",
+      text: "Hello! I'm News Reporter AI. I can verify news and rumors by streaming responses from credible sources. Ask me about recent events or rumors you want to confirm!",
       isBot: true,
       timestamp: new Date()
     }
@@ -80,7 +80,7 @@ export default function ChatBox() {
       setMessages(prev =>
         prev.map(msg =>
           msg.id === botMessageId
-            ? { ...msg, text: "⚠️ Error streaming response. Please try again." }
+            ? { ...msg, text: "⚠️ Error retrieving news information. Please try again." }
             : msg
         )
       )
@@ -92,7 +92,7 @@ export default function ChatBox() {
   const clearChat = () => {
     setMessages([{
       id: '1',
-      text: "Chat cleared! Ready to stream a fresh response.",
+      text: "Chat cleared! Ready to verify your news or rumors with credible sources.",
       isBot: true,
       timestamp: new Date()
     }])
@@ -102,7 +102,7 @@ export default function ChatBox() {
     <div className="flex flex-col h-full max-h-[calc(100vh-120px)] bg-white rounded-lg shadow-lg">
       {/* Chat Header */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Chat with RAG Bot (Streaming)</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Chat with News Reporter AI</h2>
         <button
           onClick={clearChat}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
@@ -142,7 +142,7 @@ export default function ChatBox() {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type your message here..."
+            placeholder="Ask about recent news or rumors..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             disabled={isLoading}
           />
@@ -156,7 +156,7 @@ export default function ChatBox() {
         </div>
 
         <div className="mt-2 text-xs text-gray-500 text-center">
-          Powered by Retrieval-Augmented Generation (Streaming)
+          Powered by News Reporter AI for verified news information
         </div>
       </form>
     </div>

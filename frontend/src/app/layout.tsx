@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'RAG Chatbot',
-  description: 'An intelligent chatbot powered by Retrieval-Augmented Generation',
+  title: 'News Reporter AI',
+  description: 'An AI-powered chatbot that verifies and provides accurate information about recent news and events from authentic sources',
 }
 
 export default function RootLayout({
