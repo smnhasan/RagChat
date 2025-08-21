@@ -8,6 +8,17 @@ A complete **News Reporter AI** system that verifies news and rumors using trust
 
 ---
 
+## Demo & Visual Overview
+
+Here are some screenshots to give a quick look at the project in action:
+
+![Home Page](/assets/home-page.png)
+![About Page](/assets/about-page.png)
+![Chatwindow Page](/assets/chat-window.png)
+
+
+---
+
 ## Project Features
 
 * ✅ **Real-Time News Verification** – Ask about recent events or rumors and receive verified information from credible sources.
@@ -33,7 +44,7 @@ root/
 
 ## Installation & Setup
 
-Each stack has separate setup instructions. You can run them independently or together.
+Each stack can be set up independently or together.
 
 ---
 
